@@ -4,9 +4,8 @@ const dotenv = require('dotenv');
 const db = require('mongoose');
 
 //Importing Routes
-const rotaAuth = require('./routes/auth');
-const postRoute = require('./routes/posts')
-
+const authRoute = require('./routes/auth');
+const productsRoute = require('./routes/products')
 const { request } = require('http');
 
 
@@ -31,8 +30,8 @@ app.use(
 app.use(express.json());
 
 // Middleware Routes
-app.use('/api/user', rotaAuth);
-app.use('/api/posts', postRoute);
+app.use('/api/user', authRoute);
+app.use('/api/product', productsRoute);
 
 
 app.listen(3000, function() {
