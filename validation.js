@@ -5,7 +5,7 @@ const Joi = require('@hapi/joi');
 
 const registerValidation = data => {
     const schema = Joi.object({
-        nome: Joi.string()
+        name: Joi.string()
           .min(6)
           .required(),
         email: Joi.string()
@@ -32,5 +32,16 @@ const loginValidation = data => {
       return schema.validate(data);
 }
 
+// const tokenValidation = data => {
+//   const schema = Joi.object({
+//       user_id: Joi.string()
+//         .required(),
+//       token: Joi.string()
+//         .required()
+//     });
+//     return schema.validate(data);
+// }
+
+// module.exports.tokenValidation = tokenValidation;
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;

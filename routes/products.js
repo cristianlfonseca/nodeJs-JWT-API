@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const verify = require('./verifyToken')
-const Product = require('../model/Product')
+const Product = require('../models/Product')
 
 
 router.post('/create', async (req, res) => {
@@ -23,7 +23,7 @@ router.post('/create', async (req, res) => {
 })
 
 
-router.get('/list', async (req,res) => {
+router.get('/list', verify ,async (req,res) => {
 
     let filter  = {};
     for (const key in req.query) {
