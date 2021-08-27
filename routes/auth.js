@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Token = require('../models/Token');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const verify = require('./verifyToken')
 const {registerValidation,loginValidation} = require('../validation');
 
 
@@ -41,7 +42,7 @@ router.post('/register', async (req, res) => {
 //LOGIN
 router.post('/login', async(req,res) => {
 
-  // Validate data before user register
+  // Validate login data
   const {error} = loginValidation(req.body);
   if(error) return res.status(400).send(error.details[0].message)
 
@@ -49,58 +50,48 @@ router.post('/login', async(req,res) => {
   const user = await User.findOne({email: req.body.email})
   if (!user) return res.status(400).send("Email ou senha errados");
 
-  //TODO separate password validation
-
-  //Create a a valid User token 
+  //Create a valid User token 
   const token = jwt.sign({_id: user._id},process.env.TOKEN);
-  res.header('auth-token',token).send(token);
-
-  //Set an activeToken
+  
+  //Set an activeToken from created token
   const activeToken = new Token({
     user_id:user._id,
     token:token,
   })
   
-  //Check if exists token
+  //Check if exists token into DB
   const oldToken = await Token.findOne({user_id: user._id});
-  console.log(oldToken)
   
   if(oldToken) {
     const up = await Token.updateOne({user_id:user._id},{$set:{token:token}})
-    console.log(up);
+    res.header('auth-token',token).status(200).send(token);
   }else{
-  
+    
     try {
       const savedToken = await activeToken.save();
+      res.header('auth-token',token).status(200).send(token);
       console.log("Token salvo");
       console.log(savedToken)
-      // res.send(activeToken);
     } catch (erro) {
       console.log(erro);
-      res.status(400).send(erro);
+      res.status(400).send("Problema no Token de autenticação." + erro);
     }
-
   }  
-
-
-
 })
 
 // LOGOUT insert verify?
-router.post('/logout',async(req,res) => {
+router.post('/logout', verify , async(req,res) => {
+  //Front-end Logout must end cookies session
+  //Back-end will finish active token saved
+  const token = req.header('auth-token');
 
-  // const jwt=require("jsonwebtoken"); 
-  // const User=require("../models/usersModel"); 
-  // const auth=async(req,res,next)=>{ 
-  //   try{ 
-  //     const token = req.headers.authorization.replace("Bearer ",""); 
-  //     const decode = jwt.verify(token,"secret"); 
-  //     const user=await User.findOne({ _id:decode._id }); 
-      
-  //     if(!user){ 
-  //       throw new Error() } req.token=token; req.user=user; next() }
-  //     catch(error){ return res.status(401).json('Unauthorized access'); } } 
-  //     module.exports=auth
+  try {
+    await Token.deleteOne({token: token})
+    res.status(200).send("Logout Completo")
+  }catch (error) {
+    res.status(400).send("Erro ao efeuar logout");
+  }
+
 })
 
 module.exports = router;
